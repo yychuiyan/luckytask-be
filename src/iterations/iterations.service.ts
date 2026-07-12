@@ -3,12 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Iteration, IterationStatus } from './iteration.entity';
 
-const STATUS_ORDER: Record<string, number> = {
-  [IterationStatus.PLANNING]: 0,
-  [IterationStatus.IN_PROGRESS]: 1,
-  [IterationStatus.DONE]: 2,
-};
-
 @Injectable()
 export class IterationsService {
   constructor(
@@ -17,27 +11,33 @@ export class IterationsService {
   ) {}
 
   async findAll(userId: number, projectId?: number, page = 1, pageSize = 10) {
-    const where: Record<string, unknown> = { userId };
-    if (projectId) where.projectId = projectId;
+    const pageNum = Math.max(1, page);
+    const pageSizeNum = Math.max(1, pageSize);
 
-    const [items, total] = await this.repo.findAndCount({
-      where,
-      relations: { project: true },
-    });
+    const qb = this.repo
+      .createQueryBuilder('it')
+      .leftJoinAndSelect('it.project', 'project')
+      .where('it.userId = :userId', { userId });
 
-    // 状态排序 + 截止日期降序
-    items.sort((a, b) => {
-      const sa = STATUS_ORDER[a.status] ?? 99;
-      const sb = STATUS_ORDER[b.status] ?? 99;
-      if (sa !== sb) return sa - sb;
-      if (!a.endDate && !b.endDate) return 0;
-      if (!a.endDate) return 1;
-      if (!b.endDate) return -1;
-      return b.endDate.localeCompare(a.endDate);
-    });
+    if (projectId)
+      qb.andWhere('it.projectId = :projectId', { projectId });
 
-    const paged = items.slice((page - 1) * pageSize, page * pageSize);
-    return { items: paged, total, page, pageSize };
+    // 状态排序（SQL CASE WHEN）+ 截止日期降序，数据库侧完成分页
+    qb.orderBy(
+      `CASE it.status
+        WHEN 'planning' THEN 0
+        WHEN 'in_progress' THEN 1
+        WHEN 'done' THEN 2
+        ELSE 99 END`,
+      'ASC',
+    ).addOrderBy('it.endDate', 'DESC');
+
+    const [items, total] = await qb
+      .skip((pageNum - 1) * pageSizeNum)
+      .take(pageSizeNum)
+      .getManyAndCount();
+
+    return { items, total, page: pageNum, pageSize: pageSizeNum };
   }
 
   async findOne(userId: number, id: number) {

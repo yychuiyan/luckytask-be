@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { User } from '../auth/user.entity';
 import { Project } from '../projects/project.entity';
@@ -21,9 +22,11 @@ export class Iteration {
   @PrimaryGeneratedColumn({ unsigned: true })
   id: number;
 
+  @Index()
   @Column({ name: 'project_id', unsigned: true })
   projectId: number;
 
+  @Index()
   @Column({ name: 'user_id', unsigned: true })
   userId: number;
 
@@ -36,6 +39,7 @@ export class Iteration {
   @Column({ name: 'end_date', type: 'date' })
   endDate: string;
 
+  @Index()
   @Column({
     type: 'enum',
     enum: IterationStatus,

@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { User } from '../auth/user.entity';
 
@@ -20,6 +21,7 @@ export class Project {
   @PrimaryGeneratedColumn({ unsigned: true })
   id: number;
 
+  @Index()
   @Column({ name: 'user_id', unsigned: true })
   userId: number;
 
@@ -29,6 +31,7 @@ export class Project {
   @Column({ type: 'text', nullable: true })
   description: string;
 
+  @Index()
   @Column({
     type: 'enum',
     enum: ProjectStatus,

@@ -22,7 +22,7 @@ export class DashboardService {
   async getDashboard(userId: number) {
     const today = new Date().toISOString().slice(0, 10);
 
-    // 并行执行所有查询
+    // 所有独立查询全部并行执行
     const [
       activeTasks,
       taskCounts,
@@ -31,11 +31,14 @@ export class DashboardService {
       recentMemos,
       todayTodos,
       weekTodosResult,
+      overdueTodoCount,
+      activeProjects,
     ] = await Promise.all([
-      // 进行中的任务
+      // 进行中的任务（限制 50 条，仪表盘无需全量）
       this.taskRepo.find({
         where: { userId, status: TaskStatus.IN_PROGRESS },
         order: { endDate: 'ASC' },
+        take: 50,
       }),
       // SQL 聚合统计任务数量
       this.taskRepo
@@ -67,7 +70,7 @@ export class DashboardService {
         order: { updatedAt: 'DESC' },
         take: 5,
       }),
-      // 今日待办（只取未完成 + 有截止日期的）
+      // 今日待办（未完成 + 有截止日期，限制 300 条防止全量加载）
       this.todoRepo
         .createQueryBuilder('todo')
         .leftJoinAndSelect('todo.task', 'task')
@@ -77,9 +80,25 @@ export class DashboardService {
         })
         .andWhere('todo.dueDate IS NOT NULL')
         .orderBy('todo.dueDate', 'ASC')
+        .take(300)
         .getMany(),
       // 本周待办
       this.getWeekTodos(userId),
+      // 逾期待办计数（已移入并行块）
+      this.todoRepo
+        .createQueryBuilder('todo')
+        .where('todo.userId = :userId', { userId })
+        .andWhere('todo.status NOT IN (:...doneStatuses)', {
+          doneStatuses: [TodoStatus.DONE, TodoStatus.CANCELLED],
+        })
+        .andWhere('todo.dueDate < :today', { today })
+        .getCount(),
+      // 活跃项目列表（已移入并行块）
+      this.projectRepo.find({
+        where: { userId, status: ProjectStatus.IN_PROGRESS },
+        order: { updatedAt: 'DESC' },
+        take: 5,
+      }),
     ]);
 
     // 解析聚合统计结果
@@ -96,25 +115,12 @@ export class DashboardService {
     const pendingTodoCount =
       countMap(todoCounts, TodoStatus.PENDING) +
       countMap(todoCounts, TodoStatus.IN_PROGRESS);
-    const overdueTodoCount = await this.todoRepo
-      .createQueryBuilder('todo')
-      .where('todo.userId = :userId', { userId })
-      .andWhere('todo.status NOT IN (:...doneStatuses)', {
-        doneStatuses: [TodoStatus.DONE, TodoStatus.CANCELLED],
-      })
-      .andWhere('todo.dueDate < :today', { today })
-      .getCount();
 
-    // 项目活跃列表
+    // 项目活跃统计
     const activeProjectCount = countMap(
       projectCounts,
       ProjectStatus.IN_PROGRESS,
     );
-    const activeProjects = await this.projectRepo.find({
-      where: { userId, status: ProjectStatus.IN_PROGRESS },
-      order: { updatedAt: 'DESC' },
-      take: 5,
-    });
 
     // 批量计算进行中任务的待办统计
     const taskIds = activeTasks.map((t) => t.id);

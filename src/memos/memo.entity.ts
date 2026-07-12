@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { User } from '../auth/user.entity';
 import { Project } from '../projects/project.entity';
@@ -15,6 +16,7 @@ export class Memo {
   @PrimaryGeneratedColumn({ unsigned: true })
   id: number;
 
+  @Index()
   @Column({ name: 'user_id', unsigned: true })
   userId: number;
 
@@ -24,6 +26,7 @@ export class Memo {
   @Column({ type: 'mediumtext', nullable: true })
   content: string;
 
+  @Index()
   @Column({ length: 100, default: '' })
   folder: string;
 

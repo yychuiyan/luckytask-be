@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { User } from '../auth/user.entity';
 import { Project } from '../projects/project.entity';
@@ -35,18 +36,22 @@ export class Requirement {
   @Column({ name: 'auto_id', length: 20, unique: true })
   autoId: string;
 
+  @Index()
   @Column({ name: 'project_id', unsigned: true })
   projectId: number;
 
+  @Index()
   @Column({ name: 'iteration_id', unsigned: true, nullable: true })
   iterationId: number;
 
+  @Index()
   @Column({ name: 'user_id', unsigned: true })
   userId: number;
 
   @Column({ length: 255 })
   title: string;
 
+  @Index()
   @Column({
     type: 'enum',
     enum: RequirementPriority,
@@ -54,6 +59,7 @@ export class Requirement {
   })
   priority: RequirementPriority;
 
+  @Index()
   @Column({
     type: 'enum',
     enum: RequirementStatus,

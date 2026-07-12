@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { User } from '../auth/user.entity';
 import { Project } from '../projects/project.entity';
@@ -15,6 +16,7 @@ export class Repo {
   @PrimaryGeneratedColumn({ unsigned: true })
   id: number;
 
+  @Index()
   @Column({ name: 'user_id', unsigned: true })
   userId: number;
 

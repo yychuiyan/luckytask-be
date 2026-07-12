@@ -3,15 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Requirement, RequirementStatus } from './requirement.entity';
 
-const STATUS_ORDER: Record<string, number> = {
-  [RequirementStatus.PENDING]: 0,
-  [RequirementStatus.TODO]: 1,
-  [RequirementStatus.IN_PROGRESS]: 2,
-  [RequirementStatus.TESTING]: 3,
-  [RequirementStatus.DONE]: 4,
-  [RequirementStatus.CANCELLED]: 5,
-};
-
 @Injectable()
 export class RequirementsService {
   constructor(
@@ -30,30 +21,43 @@ export class RequirementsService {
       pageSize?: number;
     },
   ) {
-    const where: Record<string, unknown> = { userId };
-    if (query.projectId) where.projectId = query.projectId;
-    if (query.iterationId) where.iterationId = query.iterationId;
-    if (query.status) where.status = query.status;
-    if (query.priority) where.priority = query.priority;
-
     const page = Math.max(1, query.page || 1);
     const pageSize = Math.max(1, query.pageSize || 10);
 
-    const [items, total] = await this.repo.findAndCount({
-      where,
-      relations: { iteration: true, project: true },
-    });
+    const qb = this.repo
+      .createQueryBuilder('req')
+      .leftJoinAndSelect('req.iteration', 'iteration')
+      .leftJoinAndSelect('req.project', 'project')
+      .where('req.userId = :userId', { userId });
 
-    // 状态排序 + 更新时间降序
-    items.sort((a, b) => {
-      const sa = STATUS_ORDER[a.status] ?? 99;
-      const sb = STATUS_ORDER[b.status] ?? 99;
-      if (sa !== sb) return sa - sb;
-      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-    });
+    if (query.projectId)
+      qb.andWhere('req.projectId = :projectId', { projectId: query.projectId });
+    if (query.iterationId)
+      qb.andWhere('req.iterationId = :iterationId', { iterationId: query.iterationId });
+    if (query.status)
+      qb.andWhere('req.status = :status', { status: query.status });
+    if (query.priority)
+      qb.andWhere('req.priority = :priority', { priority: query.priority });
 
-    const paged = items.slice((page - 1) * pageSize, page * pageSize);
-    return { items: paged, total, page, pageSize };
+    // 状态排序（SQL CASE WHEN）+ 更新时间降序，数据库侧完成分页
+    qb.orderBy(
+      `CASE req.status
+        WHEN 'pending' THEN 0
+        WHEN 'todo' THEN 1
+        WHEN 'in_progress' THEN 2
+        WHEN 'testing' THEN 3
+        WHEN 'done' THEN 4
+        WHEN 'cancelled' THEN 5
+        ELSE 99 END`,
+      'ASC',
+    ).addOrderBy('req.updatedAt', 'DESC');
+
+    const [items, total] = await qb
+      .skip((page - 1) * pageSize)
+      .take(pageSize)
+      .getManyAndCount();
+
+    return { items, total, page, pageSize };
   }
 
   async findOne(userId: number, id: number) {

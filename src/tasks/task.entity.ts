@@ -7,6 +7,7 @@ import {
   ManyToOne,
   OneToMany,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { User } from '../auth/user.entity';
 import { Todo } from '../todos/todo.entity';
@@ -38,12 +39,14 @@ export class Task {
   @PrimaryGeneratedColumn({ unsigned: true })
   id: number;
 
+  @Index()
   @Column({ name: 'user_id', unsigned: true })
   userId: number;
 
   @Column({ length: 255 })
   title: string;
 
+  @Index()
   @Column({ type: 'enum', enum: TaskStatus, default: TaskStatus.POOL })
   status: TaskStatus;
 
@@ -63,6 +66,7 @@ export class Task {
   @Column({ type: 'enum', enum: TaskCycle, default: TaskCycle.ONCE })
   cycle: TaskCycle;
 
+  @Index()
   @Column({ length: 100, nullable: true })
   assignee: string;
 

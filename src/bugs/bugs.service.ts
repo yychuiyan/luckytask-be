@@ -3,14 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Bug, BugStatus } from './bug.entity';
 
-const STATUS_ORDER: Record<string, number> = {
-  [BugStatus.PENDING]: 0,
-  [BugStatus.TODO]: 1,
-  [BugStatus.IN_PROGRESS]: 2,
-  [BugStatus.VERIFYING]: 3,
-  [BugStatus.CLOSED]: 4,
-};
-
 @Injectable()
 export class BugsService {
   constructor(
@@ -29,30 +21,43 @@ export class BugsService {
       pageSize?: number;
     },
   ) {
-    const where: Record<string, unknown> = { userId };
-    if (query.projectId) where.projectId = query.projectId;
-    if (query.iterationId) where.iterationId = query.iterationId;
-    if (query.status) where.status = query.status;
-    if (query.severity) where.severity = query.severity;
-
     const page = Math.max(1, query.page || 1);
     const pageSize = Math.max(1, query.pageSize || 10);
 
-    const [items, total] = await this.repo.findAndCount({
-      where,
-      relations: { iteration: true, requirement: true, project: true },
-    });
+    const qb = this.repo
+      .createQueryBuilder('bug')
+      .leftJoinAndSelect('bug.iteration', 'iteration')
+      .leftJoinAndSelect('bug.requirement', 'requirement')
+      .leftJoinAndSelect('bug.project', 'project')
+      .where('bug.userId = :userId', { userId });
 
-    // 状态排序 + 更新时间降序
-    items.sort((a, b) => {
-      const sa = STATUS_ORDER[a.status] ?? 99;
-      const sb = STATUS_ORDER[b.status] ?? 99;
-      if (sa !== sb) return sa - sb;
-      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-    });
+    if (query.projectId)
+      qb.andWhere('bug.projectId = :projectId', { projectId: query.projectId });
+    if (query.iterationId)
+      qb.andWhere('bug.iterationId = :iterationId', { iterationId: query.iterationId });
+    if (query.status)
+      qb.andWhere('bug.status = :status', { status: query.status });
+    if (query.severity)
+      qb.andWhere('bug.severity = :severity', { severity: query.severity });
 
-    const paged = items.slice((page - 1) * pageSize, page * pageSize);
-    return { items: paged, total, page, pageSize };
+    // 状态排序（SQL CASE WHEN）+ 更新时间降序，数据库侧完成分页
+    qb.orderBy(
+      `CASE bug.status
+        WHEN 'pending' THEN 0
+        WHEN 'todo' THEN 1
+        WHEN 'in_progress' THEN 2
+        WHEN 'verifying' THEN 3
+        WHEN 'closed' THEN 4
+        ELSE 99 END`,
+      'ASC',
+    ).addOrderBy('bug.updatedAt', 'DESC');
+
+    const [items, total] = await qb
+      .skip((page - 1) * pageSize)
+      .take(pageSize)
+      .getManyAndCount();
+
+    return { items, total, page, pageSize };
   }
 
   async findOne(userId: number, id: number) {

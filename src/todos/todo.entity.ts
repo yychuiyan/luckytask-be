@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { User } from '../auth/user.entity';
 import { Task } from '../tasks/task.entity';
@@ -30,21 +31,25 @@ export class Todo {
   @PrimaryGeneratedColumn({ unsigned: true })
   id: number;
 
+  @Index()
   @Column({ name: 'task_id', unsigned: true, nullable: true })
   taskId: number | null;
 
+  @Index()
   @Column({ name: 'user_id', unsigned: true })
   userId: number;
 
   @Column({ length: 255 })
   title: string;
 
+  @Index()
   @Column({ type: 'enum', enum: TodoStatus, default: TodoStatus.PENDING })
   status: TodoStatus;
 
   @Column({ name: 'start_date', type: 'date', nullable: true })
   startDate: string;
 
+  @Index()
   @Column({ name: 'due_date', type: 'date', nullable: true })
   dueDate: string;
 

@@ -2,7 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Task, TaskStatus } from './task.entity';
-import { Todo, TodoStatus } from '../todos/todo.entity';
+import { Todo } from '../todos/todo.entity';
+import { calcGroupedTodoStats, calcTodoStats } from '../common/todo-stats';
 
 export interface TaskQuery {
   status?: TaskStatus;
@@ -26,12 +27,20 @@ export class TasksService {
     const page = Math.max(1, query.page || 1);
     const pageSize = Math.max(1, query.pageSize || 15);
 
-    const qb = this.taskRepo.createQueryBuilder('task').where('task.userId = :userId', { userId });
+    const qb = this.taskRepo
+      .createQueryBuilder('task')
+      .where('task.userId = :userId', { userId });
 
-    if (query.status) qb.andWhere('task.status = :status', { status: query.status });
-    if (query.priority) qb.andWhere('task.priority = :priority', { priority: query.priority });
-    if (query.assignee) qb.andWhere('task.assignee = :assignee', { assignee: query.assignee });
-    if (query.keyword) qb.andWhere('task.title LIKE :keyword', { keyword: `%${query.keyword}%` });
+    if (query.status)
+      qb.andWhere('task.status = :status', { status: query.status });
+    if (query.priority)
+      qb.andWhere('task.priority = :priority', { priority: query.priority });
+    if (query.assignee)
+      qb.andWhere('task.assignee = :assignee', { assignee: query.assignee });
+    if (query.keyword)
+      qb.andWhere('task.title LIKE :keyword', {
+        keyword: `%${query.keyword}%`,
+      });
 
     const [tasks, total] = await qb
       .orderBy('task.createdAt', 'DESC')
@@ -39,28 +48,22 @@ export class TasksService {
       .take(pageSize)
       .getManyAndCount();
 
-    // 批量计算每个任务的待办统计（进度 = 已完成待办 / 总数）
+    // 批量计算每个任务的待办统计
     if (tasks.length > 0) {
       const taskIds = tasks.map((t) => t.id);
       const todos = await this.todoRepo.find({
         where: { taskId: In(taskIds), userId },
       });
 
-      const statsMap = new Map<number, { totalTodos: number; doneTodos: number; progress: number }>();
-      for (const taskId of taskIds) {
-        const taskTodos = todos.filter((t) => t.taskId === taskId);
-        const doneCount = taskTodos.filter((t) => t.status === TodoStatus.DONE).length;
-        const totalCount = taskTodos.length;
-        statsMap.set(taskId, {
-          totalTodos: totalCount,
-          doneTodos: doneCount,
-          progress: totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0,
-        });
-      }
+      const statsMap = calcGroupedTodoStats(todos);
 
       const items = tasks.map((task) => ({
         ...task,
-        stats: statsMap.get(task.id)!,
+        stats: {
+          totalTodos: statsMap.get(task.id)?.total ?? 0,
+          doneTodos: statsMap.get(task.id)?.done ?? 0,
+          progress: statsMap.get(task.id)?.progress ?? 0,
+        },
       }));
 
       return { items, total, page, pageSize };
@@ -78,16 +81,15 @@ export class TasksService {
       order: { createdAt: 'ASC' },
     });
 
-    const doneCount = todos.filter((t) => t.status === TodoStatus.DONE).length;
-    const totalCount = todos.length;
+    const stats = calcTodoStats(todos);
 
     return {
       ...task,
       todos,
       stats: {
-        totalTodos: totalCount,
-        doneTodos: doneCount,
-        progress: totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0,
+        totalTodos: stats.total,
+        doneTodos: stats.done,
+        progress: stats.progress,
       },
     };
   }
@@ -115,13 +117,12 @@ export class TasksService {
 
   async getStats(userId: number, id: number) {
     const todos = await this.todoRepo.find({ where: { taskId: id, userId } });
-    const doneCount = todos.filter((t) => t.status === TodoStatus.DONE).length;
-    const totalCount = todos.length;
+    const stats = calcTodoStats(todos);
 
     return {
-      totalTodos: totalCount,
-      doneTodos: doneCount,
-      progress: totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0,
+      totalTodos: stats.total,
+      doneTodos: stats.done,
+      progress: stats.progress,
     };
   }
 }

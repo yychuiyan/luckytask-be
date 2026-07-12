@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Iteration, IterationStatus } from './iteration.entity';
+import { Iteration } from './iteration.entity';
 
 @Injectable()
 export class IterationsService {

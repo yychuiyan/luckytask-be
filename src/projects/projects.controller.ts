@@ -1,5 +1,22 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, Req, UseGuards } from '@nestjs/common';
-import { IsString, IsOptional, IsEnum, MinLength, MaxLength } from 'class-validator';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  IsString,
+  IsOptional,
+  IsEnum,
+  MinLength,
+  MaxLength,
+} from 'class-validator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ProjectsService } from './projects.service';
 import { ProjectStatus } from './project.entity';
@@ -41,8 +58,18 @@ export class ProjectsController {
   constructor(private readonly service: ProjectsService) {}
 
   @Get()
-  findAll(@Req() req, @Query('status') status?: ProjectStatus, @Query('page') page?: string, @Query('pageSize') pageSize?: string) {
-    return this.service.findAll(req.user.id, status, page ? +page : 1, pageSize ? +pageSize : 10);
+  findAll(
+    @Req() req,
+    @Query('status') status?: ProjectStatus,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+  ) {
+    return this.service.findAll(
+      req.user.id,
+      status,
+      page ? +page : 1,
+      pageSize ? +pageSize : 10,
+    );
   }
 
   @Get(':id')

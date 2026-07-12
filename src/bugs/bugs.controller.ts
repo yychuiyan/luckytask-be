@@ -1,5 +1,23 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, Req, UseGuards } from '@nestjs/common';
-import { IsString, IsOptional, IsEnum, IsInt, MinLength, MaxLength } from 'class-validator';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsInt,
+  MinLength,
+  MaxLength,
+} from 'class-validator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { BugsService } from './bugs.service';
 import { BugStatus, BugSeverity } from './bug.entity';
@@ -131,7 +149,14 @@ export class BugsController {
     @Query('page') page?: string,
     @Query('pageSize') pageSize?: string,
   ) {
-    return this.service.findAll(req.user.id, { projectId, iterationId, status, severity, page: page ? +page : undefined, pageSize: pageSize ? +pageSize : undefined });
+    return this.service.findAll(req.user.id, {
+      projectId,
+      iterationId,
+      status,
+      severity,
+      page: page ? +page : undefined,
+      pageSize: pageSize ? +pageSize : undefined,
+    });
   }
 
   @Get(':id')

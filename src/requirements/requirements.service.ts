@@ -10,7 +10,17 @@ export class RequirementsService {
     private readonly repo: Repository<Requirement>,
   ) {}
 
-  async findAll(userId: number, query: { projectId?: number; iterationId?: number; status?: RequirementStatus; priority?: string; page?: number; pageSize?: number }) {
+  async findAll(
+    userId: number,
+    query: {
+      projectId?: number;
+      iterationId?: number;
+      status?: RequirementStatus;
+      priority?: string;
+      page?: number;
+      pageSize?: number;
+    },
+  ) {
     const where: any = { userId };
     if (query.projectId) where.projectId = query.projectId;
     if (query.iterationId) where.iterationId = query.iterationId;
@@ -29,7 +39,10 @@ export class RequirementsService {
   }
 
   async findOne(userId: number, id: number) {
-    const r = await this.repo.findOne({ where: { id, userId }, relations: { iteration: true } });
+    const r = await this.repo.findOne({
+      where: { id, userId },
+      relations: { iteration: true },
+    });
     if (!r) throw new NotFoundException('需求不存在');
     return r;
   }

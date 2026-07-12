@@ -10,7 +10,17 @@ export class BugsService {
     private readonly repo: Repository<Bug>,
   ) {}
 
-  async findAll(userId: number, query: { projectId?: number; iterationId?: number; status?: BugStatus; severity?: string; page?: number; pageSize?: number }) {
+  async findAll(
+    userId: number,
+    query: {
+      projectId?: number;
+      iterationId?: number;
+      status?: BugStatus;
+      severity?: string;
+      page?: number;
+      pageSize?: number;
+    },
+  ) {
     const where: any = { userId };
     if (query.projectId) where.projectId = query.projectId;
     if (query.iterationId) where.iterationId = query.iterationId;
@@ -29,7 +39,10 @@ export class BugsService {
   }
 
   async findOne(userId: number, id: number) {
-    const b = await this.repo.findOne({ where: { id, userId }, relations: { iteration: true, requirement: true } });
+    const b = await this.repo.findOne({
+      where: { id, userId },
+      relations: { iteration: true, requirement: true },
+    });
     if (!b) throw new NotFoundException('缺陷不存在');
     return b;
   }

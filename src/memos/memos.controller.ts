@@ -1,5 +1,22 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, Req, UseGuards } from '@nestjs/common';
-import { IsString, IsOptional, IsInt, MinLength, MaxLength } from 'class-validator';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  IsString,
+  IsOptional,
+  IsInt,
+  MinLength,
+  MaxLength,
+} from 'class-validator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { MemosService } from './memos.service';
 
@@ -50,8 +67,19 @@ export class MemosController {
   constructor(private readonly service: MemosService) {}
 
   @Get()
-  findAll(@Req() req, @Query('folder') folder?: string, @Query('keyword') keyword?: string, @Query('page') page?: string, @Query('pageSize') pageSize?: string) {
-    return this.service.findAll(req.user.id, { folder, keyword, page: page ? +page : undefined, pageSize: pageSize ? +pageSize : undefined });
+  findAll(
+    @Req() req,
+    @Query('folder') folder?: string,
+    @Query('keyword') keyword?: string,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+  ) {
+    return this.service.findAll(req.user.id, {
+      folder,
+      keyword,
+      page: page ? +page : undefined,
+      pageSize: pageSize ? +pageSize : undefined,
+    });
   }
 
   @Get('folders')

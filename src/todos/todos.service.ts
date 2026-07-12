@@ -12,7 +12,12 @@ export class TodosService {
 
   async findAll(
     userId: number,
-    query: { taskId?: number; status?: TodoStatus; page?: number; pageSize?: number },
+    query: {
+      taskId?: number;
+      status?: TodoStatus;
+      page?: number;
+      pageSize?: number;
+    },
   ) {
     const where: any = { userId };
     if (query.taskId) where.taskId = query.taskId;
@@ -34,7 +39,10 @@ export class TodosService {
   }
 
   async findOne(userId: number, id: number) {
-    const todo = await this.todoRepo.findOne({ where: { id, userId }, relations: { task: true } });
+    const todo = await this.todoRepo.findOne({
+      where: { id, userId },
+      relations: { task: true },
+    });
     if (!todo) throw new NotFoundException('待办不存在');
     return todo;
   }

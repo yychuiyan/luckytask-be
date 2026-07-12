@@ -1,5 +1,22 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, Req, UseGuards } from '@nestjs/common';
-import { IsString, IsOptional, IsInt, MinLength, MaxLength } from 'class-validator';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  IsString,
+  IsOptional,
+  IsInt,
+  MinLength,
+  MaxLength,
+} from 'class-validator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ReposService } from './repos.service';
 
@@ -31,8 +48,16 @@ export class ReposController {
   constructor(private readonly service: ReposService) {}
 
   @Get()
-  findAll(@Req() req, @Query('page') page?: string, @Query('pageSize') pageSize?: string) {
-    return this.service.findAll(req.user.id, page ? +page : 1, pageSize ? +pageSize : 10);
+  findAll(
+    @Req() req,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+  ) {
+    return this.service.findAll(
+      req.user.id,
+      page ? +page : 1,
+      pageSize ? +pageSize : 10,
+    );
   }
 
   @Post()

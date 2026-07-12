@@ -47,7 +47,11 @@ export class Task {
   @Column({ type: 'enum', enum: TaskStatus, default: TaskStatus.POOL })
   status: TaskStatus;
 
-  @Column({ type: 'enum', enum: TaskPriority, default: TaskPriority.NOT_URGENT_NOT_IMPORTANT })
+  @Column({
+    type: 'enum',
+    enum: TaskPriority,
+    default: TaskPriority.NOT_URGENT_NOT_IMPORTANT,
+  })
   priority: TaskPriority;
 
   @Column({ name: 'start_date', type: 'date', nullable: true })

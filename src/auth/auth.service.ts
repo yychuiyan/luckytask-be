@@ -1,4 +1,8 @@
-import { Injectable, ConflictException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
@@ -28,9 +32,18 @@ export class AuthService {
     return { token, user: this.sanitizeUser(user) };
   }
 
-  async login(username: string, password: string, captchaId: string, captchaCode: string) {
+  async login(
+    username: string,
+    password: string,
+    captchaId: string,
+    captchaCode: string,
+  ) {
     // 验证码校验
-    if (!captchaId || !captchaCode || !this.verifyCaptcha(captchaId, captchaCode)) {
+    if (
+      !captchaId ||
+      !captchaCode ||
+      !this.verifyCaptcha(captchaId, captchaCode)
+    ) {
       throw new UnauthorizedException('验证码错误');
     }
 
@@ -78,7 +91,11 @@ export class AuthService {
   }
 
   private signToken(user: User) {
-    return this.jwtService.sign({ sub: user.id, username: user.username, role: user.role });
+    return this.jwtService.sign({
+      sub: user.id,
+      username: user.username,
+      role: user.role,
+    });
   }
 
   private sanitizeUser(user: User) {

@@ -1,6 +1,11 @@
 import {
-  Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn,
-  ManyToOne, JoinColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { User } from '../auth/user.entity';
 import { Project } from '../projects/project.entity';
@@ -42,10 +47,18 @@ export class Requirement {
   @Column({ length: 255 })
   title: string;
 
-  @Column({ type: 'enum', enum: RequirementPriority, default: RequirementPriority.MEDIUM })
+  @Column({
+    type: 'enum',
+    enum: RequirementPriority,
+    default: RequirementPriority.MEDIUM,
+  })
   priority: RequirementPriority;
 
-  @Column({ type: 'enum', enum: RequirementStatus, default: RequirementStatus.PENDING })
+  @Column({
+    type: 'enum',
+    enum: RequirementStatus,
+    default: RequirementStatus.PENDING,
+  })
   status: RequirementStatus;
 
   @Column({ type: 'text', nullable: true })

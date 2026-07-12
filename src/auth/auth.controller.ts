@@ -3,6 +3,7 @@ import { Throttle } from '@nestjs/throttler';
 import { IsString, MinLength, MaxLength } from 'class-validator';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import type { AuthenticatedRequest } from '../common/authenticated-request';
 
 export class RegisterDto {
   @IsString()
@@ -47,7 +48,12 @@ export class AuthController {
   @Throttle({ default: { ttl: 60000, limit: 5 } })
   @Post('login')
   login(@Body() dto: LoginDto) {
-    return this.authService.login(dto.username, dto.password, dto.captchaId, dto.captchaCode);
+    return this.authService.login(
+      dto.username,
+      dto.password,
+      dto.captchaId,
+      dto.captchaCode,
+    );
   }
 
   @Get('captcha')
@@ -57,7 +63,7 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  getMe(@Req() req: any) {
+  getMe(@Req() req: AuthenticatedRequest) {
     return this.authService.getMe(req.user.id);
   }
 }

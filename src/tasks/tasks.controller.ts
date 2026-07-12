@@ -14,6 +14,7 @@ import { IsString, IsOptional, IsEnum, IsInt, Min, Max } from 'class-validator';
 import { TasksService } from './tasks.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { TaskStatus, TaskPriority, TaskCycle } from './task.entity';
+import type { AuthenticatedRequest } from '../common/authenticated-request';
 
 export class CreateTaskDto {
   @IsString()
@@ -100,32 +101,51 @@ export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
   @Get()
-  findAll(@Req() req: any, @Query() query: any) {
-    return this.tasksService.findAll(req.user.id, query);
+  findAll(
+    @Req() req: AuthenticatedRequest,
+    @Query('status') status?: TaskStatus,
+    @Query('priority') priority?: string,
+    @Query('assignee') assignee?: string,
+    @Query('keyword') keyword?: string,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+  ) {
+    return this.tasksService.findAll(req.user.id, {
+      status,
+      priority,
+      assignee,
+      keyword,
+      page: page ? +page : undefined,
+      pageSize: pageSize ? +pageSize : undefined,
+    });
   }
 
   @Get(':id')
-  findOne(@Req() req: any, @Param('id') id: string) {
+  findOne(@Req() req: AuthenticatedRequest, @Param('id') id: string) {
     return this.tasksService.findOne(req.user.id, +id);
   }
 
   @Post()
-  create(@Req() req: any, @Body() dto: CreateTaskDto) {
+  create(@Req() req: AuthenticatedRequest, @Body() dto: CreateTaskDto) {
     return this.tasksService.create(req.user.id, dto);
   }
 
   @Patch(':id')
-  update(@Req() req: any, @Param('id') id: string, @Body() dto: UpdateTaskDto) {
+  update(
+    @Req() req: AuthenticatedRequest,
+    @Param('id') id: string,
+    @Body() dto: UpdateTaskDto,
+  ) {
     return this.tasksService.update(req.user.id, +id, dto);
   }
 
   @Delete(':id')
-  remove(@Req() req: any, @Param('id') id: string) {
+  remove(@Req() req: AuthenticatedRequest, @Param('id') id: string) {
     return this.tasksService.remove(req.user.id, +id);
   }
 
   @Get(':id/stats')
-  getStats(@Req() req: any, @Param('id') id: string) {
+  getStats(@Req() req: AuthenticatedRequest, @Param('id') id: string) {
     return this.tasksService.getStats(req.user.id, +id);
   }
 }

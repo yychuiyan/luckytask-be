@@ -1,4 +1,9 @@
-import { Module, ValidationPipe } from '@nestjs/common';
+import {
+  Module,
+  ValidationPipe,
+  MiddlewareConsumer,
+  NestModule,
+} from '@nestjs/common';
 import { APP_PIPE, APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
@@ -13,6 +18,8 @@ import { RequirementsModule } from './requirements/requirements.module';
 import { BugsModule } from './bugs/bugs.module';
 import { ReposModule } from './repos/repos.module';
 import { AdminModule } from './admin/admin.module';
+import { HealthController } from './common/health.controller';
+import { LoggerMiddleware } from './common/logger.middleware';
 
 @Module({
   imports: [
@@ -25,7 +32,7 @@ import { AdminModule } from './admin/admin.module';
       password: process.env.DB_PASSWORD || '',
       database: process.env.DB_DATABASE || 'luckytask',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: process.env.NODE_ENV !== 'production',
+      synchronize: process.env.NODE_ENV === 'development',
     }),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
     AuthModule,
@@ -39,14 +46,15 @@ import { AdminModule } from './admin/admin.module';
     ReposModule,
     AdminModule,
   ],
+  controllers: [HealthController],
   providers: [
     {
       provide: APP_PIPE,
       useFactory: () =>
         new ValidationPipe({
-          whitelist: true,          // 自动删除 DTO 未定义的字段
-          forbidNonWhitelisted: true, // 发现未定义字段直接报错 400
-          transform: true,           // 自动转换类型（query string → number）
+          whitelist: true,
+          forbidNonWhitelisted: true,
+          transform: true,
         }),
     },
     {
@@ -55,4 +63,8 @@ import { AdminModule } from './admin/admin.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}

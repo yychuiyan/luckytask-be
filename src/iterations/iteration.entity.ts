@@ -1,6 +1,11 @@
 import {
-  Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn,
-  ManyToOne, JoinColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { User } from '../auth/user.entity';
 import { Project } from '../projects/project.entity';
@@ -31,7 +36,11 @@ export class Iteration {
   @Column({ name: 'end_date', type: 'date' })
   endDate: string;
 
-  @Column({ type: 'enum', enum: IterationStatus, default: IterationStatus.PLANNING })
+  @Column({
+    type: 'enum',
+    enum: IterationStatus,
+    default: IterationStatus.PLANNING,
+  })
   status: IterationStatus;
 
   @Column({ type: 'text', nullable: true })

@@ -17,7 +17,10 @@ export interface ContributionData {
 
 @Injectable()
 export class ReposService {
-  private contributionsCache = new Map<string, { data: ContributionData; ts: number }>();
+  private contributionsCache = new Map<
+    string,
+    { data: ContributionData; ts: number }
+  >();
   private readonly CACHE_TTL = 60 * 60 * 1000; // 1 小时
 
   constructor(
@@ -36,11 +39,18 @@ export class ReposService {
     return { items, total, page, pageSize };
   }
 
-  async create(userId: number, data: { owner: string; repo: string; projectId?: number }) {
+  async create(
+    userId: number,
+    data: { owner: string; repo: string; projectId?: number },
+  ) {
     return this.repo.save(this.repo.create({ ...data, userId }));
   }
 
-  async update(userId: number, id: number, data: { projectId?: number | null }) {
+  async update(
+    userId: number,
+    id: number,
+    data: { projectId?: number | null },
+  ) {
     const r = await this.repo.findOne({ where: { id, userId } });
     if (!r) throw new NotFoundException('仓库不存在');
     Object.assign(r, data);
@@ -96,7 +106,8 @@ export class ReposService {
       if (!res.ok) return null;
 
       const json = await res.json();
-      const calendar = json?.data?.user?.contributionsCollection?.contributionCalendar;
+      const calendar =
+        json?.data?.user?.contributionsCollection?.contributionCalendar;
       if (!calendar) return null;
 
       const weeks: ContributionDay[][] = calendar.weeks.map((w: any) =>

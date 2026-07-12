@@ -7,7 +7,11 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
 
-const jwtSecret: string = process.env.JWT_SECRET ?? (() => { throw new Error('JWT_SECRET 环境变量未设置，请在 .env 文件中配置'); })();
+const jwtSecret: string =
+  process.env.JWT_SECRET ??
+  (() => {
+    throw new Error('JWT_SECRET 环境变量未设置，请在 .env 文件中配置');
+  })();
 
 @Module({
   imports: [

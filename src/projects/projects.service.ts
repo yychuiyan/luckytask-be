@@ -10,7 +10,12 @@ export class ProjectsService {
     private readonly repo: Repository<Project>,
   ) {}
 
-  async findAll(userId: number, status?: ProjectStatus, page = 1, pageSize = 10) {
+  async findAll(
+    userId: number,
+    status?: ProjectStatus,
+    page = 1,
+    pageSize = 10,
+  ) {
     const where: any = { userId };
     if (status) where.status = status;
     const [items, total] = await this.repo.findAndCount({

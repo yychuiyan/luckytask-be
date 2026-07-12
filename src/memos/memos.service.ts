@@ -10,7 +10,15 @@ export class MemosService {
     private readonly repo: Repository<Memo>,
   ) {}
 
-  async findAll(userId: number, query: { folder?: string; keyword?: string; page?: number; pageSize?: number }) {
+  async findAll(
+    userId: number,
+    query: {
+      folder?: string;
+      keyword?: string;
+      page?: number;
+      pageSize?: number;
+    },
+  ) {
     const where: any = { userId };
     if (query.folder) where.folder = query.folder;
     if (query.keyword) where.title = Like(`%${query.keyword}%`);
@@ -34,11 +42,17 @@ export class MemosService {
       .where('memo.userId = :userId', { userId })
       .groupBy('memo.folder')
       .getRawMany();
-    return result.map((r: any) => ({ name: r.folder || '未分类', count: Number(r.count) }));
+    return result.map((r: any) => ({
+      name: r.folder || '未分类',
+      count: Number(r.count),
+    }));
   }
 
   async findOne(userId: number, id: number) {
-    const m = await this.repo.findOne({ where: { id, userId }, relations: { project: true } });
+    const m = await this.repo.findOne({
+      where: { id, userId },
+      relations: { project: true },
+    });
     if (!m) throw new NotFoundException('备忘录不存在');
     return m;
   }

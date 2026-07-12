@@ -1,5 +1,24 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, Req, UseGuards } from '@nestjs/common';
-import { IsString, IsOptional, IsEnum, IsInt, IsDateString, MinLength, MaxLength } from 'class-validator';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsInt,
+  IsDateString,
+  MinLength,
+  MaxLength,
+} from 'class-validator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { IterationsService } from './iterations.service';
 import { IterationStatus } from './iteration.entity';
@@ -64,8 +83,18 @@ export class IterationsController {
   constructor(private readonly service: IterationsService) {}
 
   @Get()
-  findAll(@Req() req, @Query('projectId') projectId?: number, @Query('page') page?: string, @Query('pageSize') pageSize?: string) {
-    return this.service.findAll(req.user.id, projectId, page ? +page : 1, pageSize ? +pageSize : 10);
+  findAll(
+    @Req() req,
+    @Query('projectId') projectId?: number,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+  ) {
+    return this.service.findAll(
+      req.user.id,
+      projectId,
+      page ? +page : 1,
+      pageSize ? +pageSize : 10,
+    );
   }
 
   @Get(':id')

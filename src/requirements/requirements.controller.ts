@@ -1,5 +1,25 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, Req, UseGuards } from '@nestjs/common';
-import { IsString, IsOptional, IsEnum, IsInt, IsArray, ValidateNested, MinLength, MaxLength } from 'class-validator';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsInt,
+  IsArray,
+  ValidateNested,
+  MinLength,
+  MaxLength,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RequirementsService } from './requirements.service';
@@ -102,7 +122,14 @@ export class RequirementsController {
     @Query('page') page?: string,
     @Query('pageSize') pageSize?: string,
   ) {
-    return this.service.findAll(req.user.id, { projectId, iterationId, status, priority, page: page ? +page : undefined, pageSize: pageSize ? +pageSize : undefined });
+    return this.service.findAll(req.user.id, {
+      projectId,
+      iterationId,
+      status,
+      priority,
+      page: page ? +page : undefined,
+      pageSize: pageSize ? +pageSize : undefined,
+    });
   }
 
   @Get(':id')
@@ -116,7 +143,11 @@ export class RequirementsController {
   }
 
   @Patch(':id')
-  update(@Req() req, @Param('id') id: number, @Body() dto: UpdateRequirementDto) {
+  update(
+    @Req() req,
+    @Param('id') id: number,
+    @Body() dto: UpdateRequirementDto,
+  ) {
     return this.service.update(req.user.id, id, dto);
   }
 

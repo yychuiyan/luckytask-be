@@ -1,5 +1,6 @@
 import {
   Controller,
+  Delete,
   Get,
   Patch,
   Put,
@@ -29,6 +30,11 @@ export class AdminController {
   @Get('admin/users')
   listUsers(@Req() req: AuthenticatedRequest) {
     return this.service.findAllUsers(req.user.id);
+  }
+
+  @Delete('admin/users/:id')
+  deleteUser(@Req() req: AuthenticatedRequest, @Param('id') id: number) {
+    return this.service.deleteUser(req.user.id, id);
   }
 
   @Patch('admin/users/:id')

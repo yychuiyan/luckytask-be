@@ -1,7 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Iteration } from './iteration.entity';
+import { Iteration, IterationStatus } from './iteration.entity';
+
+const STATUS_ORDER: Record<string, number> = {
+  [IterationStatus.PLANNING]: 0,
+  [IterationStatus.IN_PROGRESS]: 1,
+  [IterationStatus.DONE]: 2,
+};
 
 @Injectable()
 export class IterationsService {
@@ -11,16 +17,27 @@ export class IterationsService {
   ) {}
 
   async findAll(userId: number, projectId?: number, page = 1, pageSize = 10) {
-    const where: any = { userId };
+    const where: Record<string, unknown> = { userId };
     if (projectId) where.projectId = projectId;
+
     const [items, total] = await this.repo.findAndCount({
       where,
       relations: { project: true },
-      order: { startDate: 'ASC' },
-      skip: (page - 1) * pageSize,
-      take: pageSize,
     });
-    return { items, total, page, pageSize };
+
+    // 状态排序 + 截止日期降序
+    items.sort((a, b) => {
+      const sa = STATUS_ORDER[a.status] ?? 99;
+      const sb = STATUS_ORDER[b.status] ?? 99;
+      if (sa !== sb) return sa - sb;
+      if (!a.endDate && !b.endDate) return 0;
+      if (!a.endDate) return 1;
+      if (!b.endDate) return -1;
+      return b.endDate.localeCompare(a.endDate);
+    });
+
+    const paged = items.slice((page - 1) * pageSize, page * pageSize);
+    return { items: paged, total, page, pageSize };
   }
 
   async findOne(userId: number, id: number) {

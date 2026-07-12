@@ -47,6 +47,17 @@ export class AdminService {
     return users.map(({ passwordHash, ...rest }) => rest);
   }
 
+  async deleteUser(adminUserId: number, targetUserId: number) {
+    await this.ensureAdmin(adminUserId);
+    if (adminUserId === targetUserId) {
+      throw new ForbiddenException('不能删除自己');
+    }
+    const user = await this.userRepo.findOne({ where: { id: targetUserId } });
+    if (!user) throw new NotFoundException('用户不存在');
+    await this.userRepo.remove(user);
+    return { message: '已删除' };
+  }
+
   async updateUser(
     adminUserId: number,
     targetUserId: number,

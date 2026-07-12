@@ -19,15 +19,15 @@ async function bootstrap() {
           defaultSrc: ["'self'"],
           scriptSrc: ["'self'", "'unsafe-inline'"],
           styleSrc: ["'self'", "'unsafe-inline'"],
-          imgSrc: ["'self'", "data:", "https:"],
+          imgSrc: ["'self'", 'data:', 'https:'],
           fontSrc: ["'self'"],
           connectSrc: [
             "'self'",
             // 允许 GitHub API（仓库模块需要）
-            "https://api.github.com",
+            'https://api.github.com',
             // 开发时 Vite HMR WebSocket
-            ...(process.env.NODE_ENV === "development"
-              ? ["ws://localhost:*"]
+            ...(process.env.NODE_ENV === 'development'
+              ? ['ws://localhost:*']
               : []),
           ],
         },
@@ -51,4 +51,4 @@ async function bootstrap() {
   await app.listen(port);
   Logger.log(`🚀 Backend running on http://localhost:${port}`, 'Bootstrap');
 }
-bootstrap();
+void bootstrap();

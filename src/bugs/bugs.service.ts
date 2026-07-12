@@ -34,28 +34,30 @@ export class BugsService {
     if (query.projectId)
       qb.andWhere('bug.projectId = :projectId', { projectId: query.projectId });
     if (query.iterationId)
-      qb.andWhere('bug.iterationId = :iterationId', { iterationId: query.iterationId });
+      qb.andWhere('bug.iterationId = :iterationId', {
+        iterationId: query.iterationId,
+      });
     if (query.status)
       qb.andWhere('bug.status = :status', { status: query.status });
     if (query.severity)
       qb.andWhere('bug.severity = :severity', { severity: query.severity });
 
-    // 状态排序（SQL CASE WHEN）+ 更新时间降序，数据库侧完成分页
-    qb.orderBy(
-      `CASE bug.status
-        WHEN 'pending' THEN 0
-        WHEN 'todo' THEN 1
-        WHEN 'in_progress' THEN 2
-        WHEN 'verifying' THEN 3
-        WHEN 'closed' THEN 4
-        ELSE 99 END`,
-      'ASC',
-    ).addOrderBy('bug.updatedAt', 'DESC');
+    qb.orderBy('bug.updatedAt', 'DESC');
 
     const [items, total] = await qb
       .skip((page - 1) * pageSize)
       .take(pageSize)
       .getManyAndCount();
+
+    // 内存排序：状态优先级（TypeORM 1.0 CASE WHEN 兼容性问题）
+    const STATUS_ORDER: Record<string, number> = {
+      pending: 0, todo: 1, in_progress: 2, verifying: 3, closed: 4,
+    };
+    items.sort((a, b) => {
+      const sa = STATUS_ORDER[a.status] ?? 99;
+      const sb = STATUS_ORDER[b.status] ?? 99;
+      return sa - sb;
+    });
 
     return { items, total, page, pageSize };
   }

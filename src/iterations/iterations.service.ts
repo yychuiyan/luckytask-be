@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Iteration, IterationStatus } from './iteration.entity';
+import { Iteration } from './iteration.entity';
 
 @Injectable()
 export class IterationsService {
@@ -19,23 +19,26 @@ export class IterationsService {
       .leftJoinAndSelect('it.project', 'project')
       .where('it.userId = :userId', { userId });
 
-    if (projectId)
-      qb.andWhere('it.projectId = :projectId', { projectId });
+    if (projectId) qb.andWhere('it.projectId = :projectId', { projectId });
 
-    // 状态排序（SQL CASE WHEN）+ 截止日期降序，数据库侧完成分页
-    qb.orderBy(
-      `CASE it.status
-        WHEN 'planning' THEN 0
-        WHEN 'in_progress' THEN 1
-        WHEN 'done' THEN 2
-        ELSE 99 END`,
-      'ASC',
-    ).addOrderBy('it.endDate', 'DESC');
+    qb.orderBy('it.endDate', 'DESC');
 
     const [items, total] = await qb
       .skip((pageNum - 1) * pageSizeNum)
       .take(pageSizeNum)
       .getManyAndCount();
+
+    // 内存排序：状态优先级（TypeORM 1.0 CASE WHEN 兼容性问题）
+    const STATUS_ORDER: Record<string, number> = {
+      planning: 0,
+      in_progress: 1,
+      done: 2,
+    };
+    items.sort((a, b) => {
+      const sa = STATUS_ORDER[a.status] ?? 99;
+      const sb = STATUS_ORDER[b.status] ?? 99;
+      return sa - sb;
+    });
 
     return { items, total, page: pageNum, pageSize: pageSizeNum };
   }

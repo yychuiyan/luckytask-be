@@ -23,8 +23,7 @@ export class ProjectsService {
       .createQueryBuilder('project')
       .where('project.userId = :userId', { userId });
 
-    if (status)
-      qb.andWhere('project.status = :status', { status });
+    if (status) qb.andWhere('project.status = :status', { status });
 
     // 状态排序（SQL CASE WHEN），数据库侧完成分页
     qb.orderBy(

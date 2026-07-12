@@ -1,11 +1,12 @@
 import {
+  Body,
   Controller,
   Delete,
   Get,
-  Patch,
-  Put,
-  Body,
   Param,
+  Patch,
+  Post,
+  Put,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -30,6 +31,14 @@ export class AdminController {
   @Get('admin/users')
   listUsers(@Req() req: AuthenticatedRequest) {
     return this.service.findAllUsers(req.user.id);
+  }
+
+  @Post('admin/users')
+  createUser(
+    @Req() req: AuthenticatedRequest,
+    @Body() body: { username: string; nickname: string; role: string; password: string },
+  ) {
+    return this.service.createUser(req.user.id, body);
   }
 
   @Delete('admin/users/:id')

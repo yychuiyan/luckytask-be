@@ -1,10 +1,12 @@
 import {
+  ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
-  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 import { User, UserRole } from '../auth/user.entity';
 import { MenuSettings } from './menu-settings.entity';
 import type { MenuConfig } from '../common/menu-config.types';
@@ -45,6 +47,23 @@ export class AdminService {
     const users = await this.userRepo.find({ order: { createdAt: 'DESC' } });
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     return users.map(({ passwordHash, ...rest }) => rest);
+  }
+
+  async createUser(
+    adminUserId: number,
+    data: { username: string; nickname: string; role: string; password: string },
+  ) {
+    await this.ensureAdmin(adminUserId);
+    const exists = await this.userRepo.findOne({ where: { username: data.username } });
+    if (exists) throw new ConflictException('用户名已存在');
+    const passwordHash = await bcrypt.hash(data.password, 10);
+    const user = this.userRepo.create({
+      username: data.username,
+      nickname: data.nickname,
+      passwordHash,
+      role: (data.role as UserRole) || UserRole.USER,
+    });
+    return this.userRepo.save(user);
   }
 
   async deleteUser(adminUserId: number, targetUserId: number) {

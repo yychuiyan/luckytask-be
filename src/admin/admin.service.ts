@@ -51,10 +51,17 @@ export class AdminService {
 
   async createUser(
     adminUserId: number,
-    data: { username: string; nickname: string; role: string; password: string },
+    data: {
+      username: string;
+      nickname: string;
+      role: string;
+      password: string;
+    },
   ) {
     await this.ensureAdmin(adminUserId);
-    const exists = await this.userRepo.findOne({ where: { username: data.username } });
+    const exists = await this.userRepo.findOne({
+      where: { username: data.username },
+    });
     if (exists) throw new ConflictException('用户名已存在');
     const passwordHash = await bcrypt.hash(data.password, 10);
     const user = this.userRepo.create({

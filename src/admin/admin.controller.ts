@@ -36,7 +36,13 @@ export class AdminController {
   @Post('admin/users')
   createUser(
     @Req() req: AuthenticatedRequest,
-    @Body() body: { username: string; nickname: string; role: string; password: string },
+    @Body()
+    body: {
+      username: string;
+      nickname: string;
+      role: string;
+      password: string;
+    },
   ) {
     return this.service.createUser(req.user.id, body);
   }

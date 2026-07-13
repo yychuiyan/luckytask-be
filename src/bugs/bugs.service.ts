@@ -51,7 +51,11 @@ export class BugsService {
 
     // 内存排序：状态优先级（TypeORM 1.0 CASE WHEN 兼容性问题）
     const STATUS_ORDER: Record<string, number> = {
-      pending: 0, todo: 1, in_progress: 2, verifying: 3, closed: 4,
+      pending: 0,
+      todo: 1,
+      in_progress: 2,
+      verifying: 3,
+      closed: 4,
     };
     items.sort((a, b) => {
       const sa = STATUS_ORDER[a.status] ?? 99;

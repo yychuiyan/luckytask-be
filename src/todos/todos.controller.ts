@@ -47,6 +47,10 @@ export class CreateTodoDto {
 
 export class UpdateTodoDto {
   @IsOptional()
+  @IsInt()
+  taskId?: number;
+
+  @IsOptional()
   @IsString()
   title?: string;
 
